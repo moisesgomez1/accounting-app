@@ -10,57 +10,35 @@ import { Disclosure } from '@headlessui/react';
 
 export type Transaction = {
   id: number;
-  date: string;             // Date of transaction
-  number: string;           // Transaction reference/number
-  description: string;      // Description of the transaction
-  debit: number;            // Debit amount (negative values stored as negatives)
-  credit: number;           // Credit amount
-  notes: string;            // Read-only imported notes
-  // Extra details (not always shown)
-  importedAt: string;       // Timestamp when imported
-  bankStatementId: string;  // Identifier linking to the bank statement
-  processedAt?: string;     // Timestamp when the transaction was completed (optional)
-  status: string;           // Workflow status (e.g., "unassigned", "in_progress", "completed")
-  assignedTo?: string;      // User assigned to this transaction
+  date: string;
+  number: string;
+  description: string;
+  debit: number;
+  credit: number;
+  notes: string;
+  importedAt: string;
+  bankStatementId: string;
+  processedAt: string;
+  status: string;
+  assignedTo: string;
 };
 
-type MasterTableProps = {
+interface MasterTableProps {
   data: Transaction[];
-};
+  onGrab?: (id: number) => void;
+  currentUser?: string;
+}
 
-const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
-  // Initialize local state with the passed-in data
-  const [tableData, setTableData] = React.useState<Transaction[]>(data);
-
-  // Simulate the current logged-in user
-  const currentUser = "Candice";
-
-  // Handler for "Grabbing" a transaction
-  const handleGrab = (id: number) => {
-    setTableData((prevData) =>
-      prevData.map((tx) =>
-        tx.id === id
-          ? { ...tx, status: "in_progress", assignedTo: currentUser }
-          : tx
-      )
-    );
-  };
-
-  // Define columns. Notice we add a custom "Actions" column for grabbing transactions.
+const MasterTable: React.FC<MasterTableProps> = ({
+  data,
+  onGrab,
+  currentUser = "Candice",
+}) => {
   const columns = React.useMemo<ColumnDef<Transaction, unknown>[]>(
     () => [
-      {
-        accessorKey: 'date',
-        header: 'Date',
-      },
-      {
-        accessorKey: 'number',
-        header: 'Number',
-      },
-      {
-        accessorKey: 'description',
-        header: 'Description',
-      },
+      { accessorKey: 'date', header: 'Date' },
+      { accessorKey: 'number', header: 'Number' },
+      { accessorKey: 'description', header: 'Description' },
       {
         accessorKey: 'debit',
         header: 'Debit',
@@ -77,20 +55,11 @@ const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
           return value !== 0 ? `$${value.toFixed(2)}` : '-';
         },
       },
+      { accessorKey: 'notes', header: 'Notes' },
+      { accessorKey: 'status', header: 'Status' },
+      { accessorKey: 'assignedTo', header: 'Assigned To' },
       {
-        accessorKey: 'notes',
-        header: 'Notes',
-      },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-      },
-      {
-        accessorKey: 'assignedTo',
-        header: 'Assigned To',
-      },
-      {
-        // Actions column: displays a "Grab Transaction" button if unassigned.
+        // Actions column for picking up transactions
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => {
@@ -98,7 +67,7 @@ const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
           if (transaction.status === "unassigned") {
             return (
               <button
-                onClick={() => handleGrab(transaction.id)}
+                onClick={() => onGrab && onGrab(transaction.id)}
                 className="text-green-600 underline text-sm"
               >
                 Grab Transaction
@@ -106,9 +75,7 @@ const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
             );
           } else if (transaction.assignedTo === currentUser) {
             return (
-              <span className="text-blue-600 text-sm">
-                You grabbed this
-              </span>
+              <span className="text-blue-600 text-sm">You grabbed this</span>
             );
           } else {
             return (
@@ -120,7 +87,7 @@ const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
         },
       },
       {
-        // Details column: toggles extra details (Imported At, Bank Statement, Processed At)
+        // Details column to show extra information on demand.
         id: 'details',
         header: 'Details',
         cell: ({ row }) => {
@@ -150,12 +117,11 @@ const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
         },
       },
     ],
-    [currentUser]
+    [onGrab, currentUser]
   );
 
-  // Create the table instance using TanStack Table
   const table = useReactTable({
-    data: tableData,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -173,7 +139,10 @@ const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
                 >
                   {header.isPlaceholder
                     ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                 </th>
               ))}
             </tr>
@@ -183,7 +152,10 @@ const MasterTable: React.FC<MasterTableProps> = ({ data }) => {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id} className="hover:bg-gray-50">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td
+                  key={cell.id}
+                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
