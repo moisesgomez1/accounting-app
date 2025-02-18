@@ -1,9 +1,9 @@
 // models/Transaction.ts
 import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../../lib/sequelize';
+import sequelize from '../lib/sequelize';
 
 export interface TransactionAttributes {
-  id: string;
+  id: number;
   date: Date;                // Transaction date (from Excel)
   number: string;            // Check number (mapped from Excel's "Check")
   description: string;       // Description
@@ -25,30 +25,30 @@ type TransactionCreationAttributes = Optional<
 
 class Transaction extends Model<TransactionAttributes, TransactionCreationAttributes>
   implements TransactionAttributes {
-  public id!: string;
-  public date!: Date;
-  public number!: string;
-  public description!: string;
-  public debit!: number;
-  public credit!: number;
-  public notes!: string;
-  public userNotes?: string;
-  public importedAt!: Date;
-  public processedAt?: Date;
-  public status!: 'unassigned' | 'in_progress' | 'completed';
-  public assignedTo?: string;
-  public bankStatementId!: string;
+  declare id: number;
+  declare date: Date;
+  declare number: string;
+  declare description: string;
+  declare debit: number;
+  declare credit: number;
+  declare notes: string;
+  declare userNotes?: string;
+  declare importedAt: Date;
+  declare processedAt?: Date;
+  declare status: 'unassigned' | 'in_progress' | 'completed';
+  declare assignedTo?: string;
+  declare bankStatementId: string;
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 Transaction.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type:  DataTypes.BIGINT,
       primaryKey: true,
+      autoIncrement: true,
     },
     date: {
       type: DataTypes.DATE,
@@ -98,10 +98,9 @@ Transaction.init(
     assignedTo: {
       type: DataTypes.UUID,
       allowNull: true,
-      // This will be associated with User.id.
     },
     bankStatementId: {
-      type: DataTypes.UUID,
+      type: DataTypes.BIGINT, // Change from DataTypes.UUID
       allowNull: false,
       // This references BankStatement.id.
     },
@@ -109,8 +108,10 @@ Transaction.init(
   {
     sequelize,
     modelName: 'Transaction',
-    tableName: 'transactions',
+    tableName: 'accounting_app_bank_transactions',
     timestamps: true, // createdAt & updatedAt are enabled here.
+    paranoid: true, // If you want to enable soft deletes (deletedAt field)
+    underscored: true, // Use snake_case for automatically added attributes
   }
 );
 

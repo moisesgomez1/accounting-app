@@ -1,26 +1,35 @@
 // src/app/(auth)/login/page.tsx
-"use client"; // This page uses client-side code
-import { signIn } from "next-auth/react";
+"use client";
+
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Trigger sign in with credentials
+
+    // Call NextAuth's signIn with our credentials provider.
     const result = await signIn("credentials", {
-      redirect: false, // Handle redirection manually if needed
-      username,
+      redirect: false,
+      email, // Our custom provider expects an "email" field.
       password,
     });
 
+    // Check for errors or successful login.
     if (result?.error) {
+      setError("Invalid email or password.");
       console.error("Failed to sign in:", result.error);
     } else {
-      // Redirect or update UI on successful login
+      setError(null);
       console.log("Logged in successfully!");
+      // Redirect to home page or another protected route after login.
+      router.push("/dashboard");
     }
   };
 
@@ -31,12 +40,14 @@ export default function LoginPage() {
         className="flex flex-col space-y-4 bg-white p-8 rounded shadow-md"
       >
         <h2 className="text-2xl font-bold text-center">Login</h2>
+        {error && <p className="text-red-500 text-center">{error}</p>}
         <input
-          type="text"
-          placeholder="Username"
+          type="email"
+          placeholder="Email"
           className="border p-2 rounded"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <input
           type="password"
@@ -44,6 +55,7 @@ export default function LoginPage() {
           className="border p-2 rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
         <button
           type="submit"

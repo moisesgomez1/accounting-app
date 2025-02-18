@@ -1,6 +1,6 @@
 // models/User.ts
 import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../../lib/sequelize';
+import sequelize from '../lib/sequelize';
 
 interface UserAttributes {
   id: string;
@@ -14,11 +14,11 @@ interface UserAttributes {
 type UserCreationAttributes = Optional<UserAttributes, 'id'>;
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public id!: string;
-  public user_firstname!: string;
-  public user_lastname!: string;
-  public lae_agent_id?: string;
-  public department?: string;
+  declare id: string;
+  declare user_firstname: string;
+  declare user_lastname: string;
+  declare lae_agent_id?: string;
+  declare department?: string;
   
   // Since timestamps are not needed, we omit createdAt/updatedAt.
 }
@@ -38,14 +38,6 @@ User.init(
     user_lastname: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
-    lae_agent_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    department: {
-      type: DataTypes.STRING,
-      allowNull: true,
     },
   },
   {

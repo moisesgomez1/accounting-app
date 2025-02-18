@@ -13,57 +13,101 @@ export type Transaction = {
   date: string;
   number: string;
   description: string;
-  debit: number;
-  credit: number;
+  debit: string;
+  credit: string;
   notes: string;
+  userNotes?: string;
   importedAt: string;
   bankStatementId: string;
   processedAt: string;
   status: string;
   assignedTo: string;
+  createdAt: string;
+  assignee?: {
+    user_firstname: string;
+    user_lastname: string;
+    id: string;
+  };
 };
 
 interface MasterTableProps {
   data: Transaction[];
   onGrab?: (id: number) => void;
-  currentUser?: string;
+  currentUser?: string | null;
 }
+
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+};
 
 const MasterTable: React.FC<MasterTableProps> = ({
   data,
   onGrab,
-  currentUser = "Candice",
+  currentUser,
 }) => {
   const columns = React.useMemo<ColumnDef<Transaction, unknown>[]>(
     () => [
-      { accessorKey: 'date', header: 'Date' },
+      {
+        accessorKey: 'date',
+        header: 'Date',
+        cell: ({ getValue }) => formatDate(getValue() as string),
+      },
       { accessorKey: 'number', header: 'Number' },
       { accessorKey: 'description', header: 'Description' },
       {
         accessorKey: 'debit',
         header: 'Debit',
         cell: ({ getValue }) => {
-          const value = getValue() as number;
-          return value !== 0 ? `($${Math.abs(value).toFixed(2)})` : '-';
+          const value = getValue() as string;
+          return value ? `($${value})` : '-';
         },
       },
       {
         accessorKey: 'credit',
         header: 'Credit',
         cell: ({ getValue }) => {
-          const value = getValue() as number;
-          return value !== 0 ? `$${value.toFixed(2)}` : '-';
+          const value = getValue() as string;
+          return value ? `$${value}` : '-';
         },
       },
-      { accessorKey: 'notes', header: 'Notes' },
-      { accessorKey: 'status', header: 'Status' },
-      { accessorKey: 'assignedTo', header: 'Assigned To' },
       {
-        // Actions column for picking up transactions
+        id: 'notes',
+        header: 'Notes',
+        cell: ({ row }) => {
+          const { notes, userNotes } = row.original;
+          // Show both if userNotes exist; otherwise just the imported notes.
+          if (userNotes && userNotes.trim()) {
+            return (
+              <div>
+                <div>{userNotes}</div>
+              </div>
+            );
+          }
+          return <span>{notes || '-'}</span>;
+        },
+      },
+      { accessorKey: 'status', header: 'Status' },
+      {
+        id: 'assignedTo',
+        header: 'Assigned To',
+        cell: ({ row }) => {
+          const transaction = row.original;
+          return transaction.assignee
+            ? `${transaction.assignee.user_firstname} ${transaction.assignee.user_lastname}`
+            : '';
+        },
+      },
+      {
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => {
           const transaction = row.original;
+          // If the transaction is unassigned, show the grab button.
           if (transaction.status === "unassigned") {
             return (
               <button
@@ -73,21 +117,24 @@ const MasterTable: React.FC<MasterTableProps> = ({
                 Grab Transaction
               </button>
             );
-          } else if (transaction.assignedTo === currentUser) {
-            return (
-              <span className="text-blue-600 text-sm">You grabbed this</span>
-            );
-          } else {
+          }
+          // Check if the assignee exists and if the current user is the assignee.
+          else if (transaction.assignee && transaction.assignee.id === currentUser) {
+            return <span className="text-blue-600 text-sm">You grabbed this</span>;
+          }
+          // Otherwise, if the assignee exists, display the first and last name.
+          else if (transaction.assignee) {
             return (
               <span className="text-gray-500 text-sm">
-                Assigned to {transaction.assignedTo}
+                Assigned to {transaction.assignee.user_firstname} {transaction.assignee.user_lastname}
               </span>
             );
           }
+          // Optionally, if there's no assignee, display nothing or a fallback message.
+          return null;
         },
       },
       {
-        // Details column to show extra information on demand.
         id: 'details',
         header: 'Details',
         cell: ({ row }) => {
@@ -139,10 +186,7 @@ const MasterTable: React.FC<MasterTableProps> = ({
                 >
                   {header.isPlaceholder
                     ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                    : flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
               ))}
             </tr>

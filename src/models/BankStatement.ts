@@ -1,9 +1,9 @@
 // models/BankStatement.ts
 import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../../lib/sequelize';
+import sequelize from '../lib/sequelize';
 
 interface BankStatementAttributes {
-  id: string;
+  id: number; // Changed from string to number
   statementDate: Date;
   importedAt: Date;
   fileName?: string;
@@ -13,18 +13,18 @@ type BankStatementCreationAttributes = Optional<BankStatementAttributes, 'id'>;
 
 class BankStatement extends Model<BankStatementAttributes, BankStatementCreationAttributes>
   implements BankStatementAttributes {
-  public id!: string;
-  public statementDate!: Date;
-  public importedAt!: Date;
-  public fileName?: string;
+  declare id: number;
+  declare statementDate: Date;
+  declare importedAt: Date;
+  declare fileName?: string;
 }
 
 BankStatement.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.BIGINT, // or DataTypes.INTEGER if preferred
       primaryKey: true,
+      autoIncrement: true,
     },
     statementDate: {
       type: DataTypes.DATE,
@@ -43,8 +43,10 @@ BankStatement.init(
   {
     sequelize,
     modelName: 'BankStatement',
-    tableName: 'bank_statements',
+    tableName: 'accounting_app_bank_statements',
     timestamps: false, // We don’t need createdAt/updatedAt here
+    paranoid: true, // Enable soft deletes (deletedAt field)
+    underscored: true,
   }
 );
 

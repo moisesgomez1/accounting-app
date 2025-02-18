@@ -1,63 +1,92 @@
-// app/my-transactions/page.tsx
 "use client";
-import React from "react";
-import { Transaction } from "../../../../components/UserTransactions";
-import UserTransactions from "../../../../components/UserTransactions";
+import React, { useEffect, useState } from "react";
+import UserTransactions, {
+    Transaction,
+} from "../../../components/UserTransactions";
+import { useSession } from "next-auth/react";
 
-// Optionally, you could fetch the data for the current user here,
-// e.g., via an API call or a context, and then pass it as a prop.
-export const dummyUserTransactions: Transaction[] = [
-    {
-      id: 1,
-      date: "2023-01-01",
-      number: "TX-001",
-      description: "Payment received from Client A",
-      debit: 0,
-      credit: 1500,
-      notes: "Imported note: Payment received on time.",
-      importedAt: "2023-01-02T09:00:00Z",
-      bankStatementId: "BS-2023-01-01",
-      processedAt: "",
-      status: "in_progress",
-      assignedTo: "Candice",
-      userNotes: "Review invoice details and verify receipt.",
-    },
-    {
-      id: 2,
-      date: "2023-01-03",
-      number: "TX-002",
-      description: "Utility bill payment",
-      debit: -200,
-      credit: 0,
-      notes: "Imported note: Payment due immediately.",
-      importedAt: "2023-01-04T09:00:00Z",
-      bankStatementId: "BS-2023-01-03",
-      processedAt: "",
-      status: "in_progress",
-      assignedTo: "Candice",
-      userNotes: "",
-    },
-    {
-      id: 3,
-      date: "2023-01-05",
-      number: "TX-003",
-      description: "Refund issued to Customer B",
-      debit: 0,
-      credit: 100,
-      notes: "Imported note: Refund processed after dispute.",
-      importedAt: "2023-01-06T09:00:00Z",
-      bankStatementId: "BS-2023-01-05",
-      processedAt: "2023-01-07T10:00:00Z",
-      status: "completed",
-      assignedTo: "Candice",
-      userNotes: "Follow up on refund confirmation.",
-    },
-  ];
 export default function MyTransactionsPage() {
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">My Transactions</h1>
-      <UserTransactions data={dummyUserTransactions} />
-    </div>
-  );
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const { data: session, status } = useSession();
+
+    const userId = session?.user?.id;
+
+    console.log (userId)
+    console.log("Session:", session);
+
+    // Fetch transactions assigned to the current user
+    const fetchTransactions = async () => {
+        if (!userId) return; // Ensure userId is available before fetching
+
+        setLoading(true);
+        try {
+            const response = await fetch(`/api/transactions/assigned?userId=${userId}`);
+            if (!response.ok) {
+                throw new Error("Failed to fetch transactions");
+            }
+            const data = await response.json();
+            setTransactions(data.transactions);
+        } catch (error) {
+            console.error("Error fetching transactions:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Wait for userId to be defined before starting the polling
+    useEffect(() => {
+        if (!userId) return; // Exit early if userId is not available
+
+        fetchTransactions(); // initial fetch
+        const intervalId = setInterval(fetchTransactions, 10000);
+        return () => clearInterval(intervalId);
+    }, [userId]); // Depend on userId so that it runs when userId becomes available
+
+    // Handler to update a transaction (for both note changes and marking as complete)
+    const updateTransaction = async (
+        id: number,
+        updates: Partial<Transaction>
+    ) => {
+        try {
+            const response = await fetch(`/api/transactions/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updates),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to update transaction");
+            }
+            // After update, re-fetch the transactions to reflect the changes.
+            fetchTransactions();
+        } catch (error) {
+            console.error("Error updating transaction:", error);
+        }
+    };
+
+    // Handler for updating notes.
+    const handleNoteChange = async (id: number, note: string) => {
+        await updateTransaction(id, { userNotes: note });
+    };
+
+    // Handler for marking a transaction as complete.
+    const handleMarkCompleted = async (id: number) => {
+        await updateTransaction(id, {
+            status: "completed",
+            processedAt: new Date().toISOString(),
+        });
+    };
+
+    return (
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">My Transactions</h1>
+            <UserTransactions
+                data={transactions}
+                onNoteChange={handleNoteChange}
+                onMarkCompleted={handleMarkCompleted}
+            />
+        </div>
+    );
 }
