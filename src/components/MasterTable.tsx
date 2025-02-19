@@ -6,7 +6,7 @@ import {
   ColumnDef,
   flexRender,
 } from '@tanstack/react-table';
-import { Disclosure } from '@headlessui/react';
+import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
 
 export type Transaction = {
   id: number;
@@ -135,18 +135,18 @@ const MasterTable: React.FC<MasterTableProps> = ({
         },
       },
       {
-        id: 'details',
-        header: 'Details',
+        id: "details",
+        header: "Details",
         cell: ({ row }) => {
           const transaction = row.original;
           return (
             <Disclosure>
               {({ open }) => (
                 <div>
-                  <Disclosure.Button className="text-blue-600 underline text-sm">
-                    {open ? 'Hide Details' : 'Show Details'}
-                  </Disclosure.Button>
-                  <Disclosure.Panel className="mt-2 text-xs text-gray-500">
+                  <DisclosureButton className="text-blue-600 underline text-sm">
+                    {open ? "Hide Details" : "Show Details"}
+                  </DisclosureButton>
+                  <DisclosurePanel className="mt-2 text-xs text-gray-500">
                     <div>
                       <strong>Imported At:</strong> {transaction.importedAt}
                     </div>
@@ -154,15 +154,16 @@ const MasterTable: React.FC<MasterTableProps> = ({
                       <strong>Bank Statement:</strong> {transaction.bankStatementId}
                     </div>
                     <div>
-                      <strong>Processed At:</strong> {transaction.processedAt || 'N/A'}
+                      <strong>Processed At:</strong> {transaction.processedAt || "N/A"}
                     </div>
-                  </Disclosure.Panel>
+                  </DisclosurePanel>
                 </div>
               )}
             </Disclosure>
           );
         },
       },
+      
     ],
     [onGrab, currentUser]
   );
@@ -174,31 +175,34 @@ const MasterTable: React.FC<MasterTableProps> = ({
   });
 
   return (
-    <div className="p-4 overflow-x-auto">
+    <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-100">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
                 >
                   {header.isPlaceholder
                     ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                 </th>
               ))}
             </tr>
           ))}
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-gray-100">
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id} className="hover:bg-gray-50">
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                  className="px-4 py-3 whitespace-nowrap text-sm text-gray-700"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>

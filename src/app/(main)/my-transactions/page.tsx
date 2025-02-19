@@ -80,13 +80,21 @@ export default function MyTransactionsPage() {
     };
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">My Transactions</h1>
+        <div className="min-h-screen w-full bg-gray-50 text-gray-800">
+          {/* Header */}
+          <header className="w-full bg-white shadow">
+            <div className="w-full px-6 py-4 flex items-center justify-between">
+            </div>
+          </header>
+    
+          {/* Main Content */}
+          <main className="w-full flex-grow px-6 py-8">
             <UserTransactions
-                data={transactions}
-                onNoteChange={handleNoteChange}
-                onMarkCompleted={handleMarkCompleted}
+              data={transactions}
+              onNoteChange={handleNoteChange}
+              onMarkCompleted={handleMarkCompleted}
             />
+          </main>
         </div>
-    );
-}
+      );
+    }

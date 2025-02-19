@@ -142,15 +142,15 @@ const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange,
   });
 
   return (
-    <div className="p-4 overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-100">
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
                 <th
                   key={header.id}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
                 >
                   {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
