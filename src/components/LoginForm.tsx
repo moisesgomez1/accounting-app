@@ -16,7 +16,7 @@ export default function LoginForm() {
       onSubmit={handleSubmit} 
       className="flex flex-col space-y-4 bg-background p-8 rounded shadow-md"
     >
-      <h2 className="text-2xl font-bold text-center text-primary">Login</h2>
+      <h2 className="text-2xl font-bold text-center text-primary-dark">Login</h2>
       <input
         type="email"
         placeholder="Email"

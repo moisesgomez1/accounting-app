@@ -8,16 +8,17 @@ import { useSession } from "next-auth/react";
 export default function MyTransactionsPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [isEditingNote, setIsEditingNote] = useState<boolean>(false);
     const { data: session, status } = useSession();
 
     const userId = session?.user?.id;
 
-    console.log (userId)
-    console.log("Session:", session);
+    console.log ("isEditingNote:", isEditingNote);
 
     // Fetch transactions assigned to the current user
     const fetchTransactions = async () => {
         if (!userId) return; // Ensure userId is available before fetching
+        
 
         setLoading(true);
         try {
@@ -37,11 +38,15 @@ export default function MyTransactionsPage() {
     // Wait for userId to be defined before starting the polling
     useEffect(() => {
         if (!userId) return; // Exit early if userId is not available
+        if (isEditingNote) {
+            console.log("Skipping fetch because a note is being edited");
+            return;
+        }
 
         fetchTransactions(); // initial fetch
         const intervalId = setInterval(fetchTransactions, 10000);
         return () => clearInterval(intervalId);
-    }, [userId]); // Depend on userId so that it runs when userId becomes available
+    }, [userId, isEditingNote]); // Depend on userId so that it runs when userId becomes available
 
     // Handler to update a transaction (for both note changes and marking as complete)
     const updateTransaction = async (
@@ -93,8 +98,10 @@ export default function MyTransactionsPage() {
               data={transactions}
               onNoteChange={handleNoteChange}
               onMarkCompleted={handleMarkCompleted}
+              setIsEditingNote={setIsEditingNote}
             />
           </main>
         </div>
       );
     }
+

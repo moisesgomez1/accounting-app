@@ -1,4 +1,3 @@
-// src/app/(auth)/login/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -14,21 +13,18 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Call NextAuth's signIn with our credentials provider.
     const result = await signIn("credentials", {
       redirect: false,
-      email, // Our custom provider expects an "email" field.
+      email,
       password,
     });
 
-    // Check for errors or successful login.
     if (result?.error) {
       setError("Invalid email or password.");
       console.error("Failed to sign in:", result.error);
     } else {
       setError(null);
       console.log("Logged in successfully!");
-      // Redirect to home page or another protected route after login.
       router.push("/dashboard");
     }
   };
@@ -39,12 +35,12 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="flex flex-col space-y-4 bg-white p-8 rounded shadow-md"
       >
-        <h2 className="text-2xl font-bold text-center">Login</h2>
+        <h2 className="text-2xl font-bold text-center text-primary-dark">Login</h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
         <input
           type="email"
           placeholder="Email"
-          className="border p-2 rounded"
+          className="border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -52,14 +48,14 @@ export default function LoginPage() {
         <input
           type="password"
           placeholder="Password"
-          className="border p-2 rounded"
+          className="border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-secondary"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
         <button
           type="submit"
-          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          className="bg-primary py-2 px-4 text-white rounded hover:bg-primary-dark"
         >
           Sign In
         </button>

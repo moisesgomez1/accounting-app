@@ -45,128 +45,146 @@ const formatDate = (dateStr: string): string => {
   return `${month}/${day}/${year}`;
 };
 
-const MasterTable: React.FC<MasterTableProps> = ({
-  data,
-  onGrab,
-  currentUser,
-}) => {
-  const columns = React.useMemo<ColumnDef<Transaction, unknown>[]>(
-    () => [
-      {
-        accessorKey: 'date',
-        header: 'Date',
-        cell: ({ getValue }) => formatDate(getValue() as string),
+export default function MasterTable({ data, onGrab, currentUser }: MasterTableProps) {
+  const columns = React.useMemo<ColumnDef<Transaction, unknown>[]>(() => [
+    {
+      accessorKey: 'date',
+      header: 'Date',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-800">{formatDate(getValue() as string)}</span>
+      ),
+    },
+    {
+      accessorKey: 'number',
+      header: 'Number',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-800">{getValue() as string}</span>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: 'Description',
+      cell: ({ getValue }) => (
+        <span className="font-bold text-sm text-gray-800">{getValue() as string}</span>
+      ),
+    },
+    {
+      accessorKey: 'debit',
+      header: 'Debit',
+      cell: ({ getValue }) => {
+        const value = getValue() as string;
+        return value ? (
+          <span className="font-bold text-sm text-gray-800">{`($${value})`}</span>
+        ) : (
+          <span className="text-sm text-gray-800">-</span>
+        );
       },
-      { accessorKey: 'number', header: 'Number' },
-      { accessorKey: 'description', header: 'Description' },
-      {
-        accessorKey: 'debit',
-        header: 'Debit',
-        cell: ({ getValue }) => {
-          const value = getValue() as string;
-          return value ? `($${value})` : '-';
-        },
+    },
+    {
+      accessorKey: 'credit',
+      header: 'Credit',
+      cell: ({ getValue }) => {
+        const value = getValue() as string;
+        return value ? (
+          <span className="font-bold text-sm text-gray-800">{`$${value}`}</span>
+        ) : (
+          <span className="text-sm text-gray-800">-</span>
+        );
       },
-      {
-        accessorKey: 'credit',
-        header: 'Credit',
-        cell: ({ getValue }) => {
-          const value = getValue() as string;
-          return value ? `$${value}` : '-';
-        },
+    },
+    {
+      id: 'notes',
+      header: 'Notes',
+      cell: ({ row }) => {
+        const { notes, userNotes } = row.original;
+        return userNotes && userNotes.trim() ? (
+          <div className="text-sm text-gray-800">{userNotes}</div>
+        ) : (
+          <span className="text-sm text-gray-800">{notes || '-'}</span>
+        );
       },
-      {
-        id: 'notes',
-        header: 'Notes',
-        cell: ({ row }) => {
-          const { notes, userNotes } = row.original;
-          // Show both if userNotes exist; otherwise just the imported notes.
-          if (userNotes && userNotes.trim()) {
-            return (
-              <div>
-                <div>{userNotes}</div>
-              </div>
-            );
-          }
-          return <span>{notes || '-'}</span>;
-        },
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-800">{getValue() as string}</span>
+      ),
+    },
+    {
+      id: 'assignedTo',
+      header: 'Assigned To',
+      cell: ({ row }) => {
+        const transaction = row.original;
+        return transaction.assignee ? (
+          <span className="text-sm text-gray-800">
+            {transaction.assignee.user_firstname} {transaction.assignee.user_lastname}
+          </span>
+        ) : (
+          <span className="text-sm text-gray-800"></span>
+        );
       },
-      { accessorKey: 'status', header: 'Status' },
-      {
-        id: 'assignedTo',
-        header: 'Assigned To',
-        cell: ({ row }) => {
-          const transaction = row.original;
-          return transaction.assignee
-            ? `${transaction.assignee.user_firstname} ${transaction.assignee.user_lastname}`
-            : '';
-        },
-      },
-      {
-        id: 'actions',
-        header: 'Actions',
-        cell: ({ row }) => {
-          const transaction = row.original;
-          // If the transaction is unassigned, show the grab button.
-          if (transaction.status === "unassigned") {
-            return (
-              <button
-                onClick={() => onGrab && onGrab(transaction.id)}
-                className="text-green-600 underline text-sm"
-              >
-                Grab Transaction
-              </button>
-            );
-          }
-          // Check if the assignee exists and if the current user is the assignee.
-          else if (transaction.assignee && transaction.assignee.id === currentUser) {
-            return <span className="text-blue-600 text-sm">You grabbed this</span>;
-          }
-          // Otherwise, if the assignee exists, display the first and last name.
-          else if (transaction.assignee) {
-            return (
-              <span className="text-gray-500 text-sm">
-                Assigned to {transaction.assignee.user_firstname} {transaction.assignee.user_lastname}
-              </span>
-            );
-          }
-          // Optionally, if there's no assignee, display nothing or a fallback message.
-          return null;
-        },
-      },
-      {
-        id: "details",
-        header: "Details",
-        cell: ({ row }) => {
-          const transaction = row.original;
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const transaction = row.original;
+        if (transaction.status === "unassigned") {
           return (
-            <Disclosure>
-              {({ open }) => (
-                <div>
-                  <DisclosureButton className="text-blue-600 underline text-sm">
-                    {open ? "Hide Details" : "Show Details"}
-                  </DisclosureButton>
-                  <DisclosurePanel className="mt-2 text-xs text-gray-500">
-                    <div>
-                      <strong>Imported At:</strong> {transaction.importedAt}
-                    </div>
-                    <div>
-                      <strong>Bank Statement:</strong> {transaction.bankStatementId}
-                    </div>
-                    <div>
-                      <strong>Processed At:</strong> {transaction.processedAt || "N/A"}
-                    </div>
-                  </DisclosurePanel>
-                </div>
-              )}
-            </Disclosure>
+            <button
+              onClick={() => onGrab && onGrab(transaction.id)}
+              className="underline text-sm text-gray-800 hover:text-gray-600"
+            >
+              Grab Transaction
+            </button>
           );
-        },
+        } else if (transaction.assignee && transaction.assignee.id === currentUser) {
+          return (
+            <span className="text-sm font-semibold text-gray-800">
+              You grabbed this
+            </span>
+          );
+        } else if (transaction.assignee) {
+          return (
+            <span className="text-sm text-gray-800">
+              Assigned to {transaction.assignee.user_firstname} {transaction.assignee.user_lastname}
+            </span>
+          );
+        }
+        return null;
       },
-      
-    ],
-    [onGrab, currentUser]
-  );
+    },
+    {
+      id: "details",
+      header: "Details",
+      cell: ({ row }) => {
+        const transaction = row.original;
+        return (
+          <Disclosure>
+            {({ open }) => (
+              <div>
+                <DisclosureButton className="underline text-sm text-gray-800 hover:text-gray-600">
+                  {open ? "Hide Details" : "Show Details"}
+                </DisclosureButton>
+                <DisclosurePanel className="mt-2 text-xs text-gray-700 space-y-1">
+                  <div>
+                    <strong>Imported At:</strong> {transaction.importedAt}
+                  </div>
+                  <div>
+                    <strong>Bank Statement:</strong> {transaction.bankStatementId}
+                  </div>
+                  <div>
+                    <strong>Processed At:</strong> {transaction.processedAt || "N/A"}
+                  </div>
+                </DisclosurePanel>
+              </div>
+            )}
+          </Disclosure>
+        );
+      },
+    },
+  ], [onGrab, currentUser]);
 
   const table = useReactTable({
     data,
@@ -175,15 +193,15 @@ const MasterTable: React.FC<MasterTableProps> = ({
   });
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-100">
+    <div className="overflow-x-auto shadow rounded-lg border border-gray-300">
+      <table className="min-w-full">
+        <thead className="bg-gray-200">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-semibold text-primary-dark uppercase tracking-wider"
                 >
                   {header.isPlaceholder
                     ? null
@@ -196,13 +214,13 @@ const MasterTable: React.FC<MasterTableProps> = ({
             </tr>
           ))}
         </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
+        <tbody className="bg-white divide-y divide-gray-200">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-gray-50">
+            <tr key={row.id} className="hover:bg-secondary-light">
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  className="px-4 py-3 whitespace-nowrap text-sm text-gray-700"
+                  className="px-4 py-3 whitespace-nowrap text-sm text-gray-800"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
@@ -214,5 +232,3 @@ const MasterTable: React.FC<MasterTableProps> = ({
     </div>
   );
 };
-
-export default MasterTable;

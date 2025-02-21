@@ -1,4 +1,3 @@
-// tailwind.config.ts
 import type { Config } from "tailwindcss";
 
 export default {
@@ -15,7 +14,7 @@ export default {
         foreground: "var(--foreground)",
         primary: {
           DEFAULT: "#004D40", // Deep teal for financial security (trustworthy)
-          dark: "#00332E", // Darker shade for hover/focus
+          dark: "#0d4029", // Darker shade for hover/focus
         },
         secondary: {
           DEFAULT: "#10B981", // Chime green (good for success)

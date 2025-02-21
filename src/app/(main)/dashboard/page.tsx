@@ -111,7 +111,7 @@ export default function DashboardPage() {
                         >
                             <div className="relative">
                                 <ListboxButton className="relative w-48 cursor-pointer rounded-lg bg-secondary py-2 pl-3 pr-10 text-left shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-dark">
-                                    <span className="block truncate">
+                                    <span className="block truncate font-bold text-primary-dark">
                                         {selectedMonth
                                             ? months.find(
                                                   (m) =>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
                         >
                             <div className="relative">
                                 <ListboxButton className="relative w-48 cursor-pointer rounded-lg bg-secondary py-2 pl-3 pr-10 text-left shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-dark">
-                                    <span className="block truncate">
+                                    <span className="block truncate font-bold text-primary-dark">
                                         {selectedYear
                                             ? selectedYear
                                             : "Select Year"}
@@ -188,16 +188,6 @@ export default function DashboardPage() {
 
                 {/* Transactions Table */}
                 <section className="flex flex-col flex-grow w-full bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div className="w-full px-6 py-4 flex items-center justify-between border-b border-gray-200">
-                        <h2 className="text-2xl font-semibold text-gray-800">
-                            Transactions
-                        </h2>
-                        {loading && (
-                            <span className="text-sm text-gray-500">
-                                Loading...
-                            </span>
-                        )}
-                    </div>
                     <div className="flex-grow w-full overflow-auto p-6">
                         <MasterTable
                             data={transactions}

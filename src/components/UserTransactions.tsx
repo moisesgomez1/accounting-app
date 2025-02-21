@@ -14,7 +14,7 @@ export type Transaction = {
   date: string; // ISO date string
   number: string;
   description: string;
-  debit: number;    // For display/calculation purposes, you may want to use numbers here
+  debit: number;
   credit: number;
   notes: string;
   importedAt: string;
@@ -31,6 +31,7 @@ type UserTransactionsProps = {
   onNoteChange: (id: number, note: string) => void;
   // Callback for marking a transaction as complete.
   onMarkCompleted: (id: number) => void;
+  setIsEditingNote: (isEditing: boolean) => void;
 };
 
 const formatDate = (dateStr: string): string => {
@@ -42,22 +43,39 @@ const formatDate = (dateStr: string): string => {
   return `${month}/${day}/${year}`;
 };
 
-const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange, onMarkCompleted }) => {
-  // Define columns for the table
+export default function UserTransactions ({ data, onNoteChange, onMarkCompleted, setIsEditingNote }: UserTransactionsProps) {
   const columns = React.useMemo<ColumnDef<Transaction, unknown>[]>(() => [
     {
       accessorKey: 'date',
       header: 'Date',
-      cell: ({ getValue }) => formatDate(getValue() as string),
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-800">{formatDate(getValue() as string)}</span>
+      ),
     },
-    { accessorKey: 'number', header: 'Number' },
-    { accessorKey: 'description', header: 'Description' },
+    {
+      accessorKey: 'number',
+      header: 'Number',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-800">{getValue() as string}</span>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: 'Description',
+      cell: ({ getValue }) => (
+        <span className="font-bold text-sm text-gray-800">{getValue() as string}</span>
+      ),
+    },
     {
       accessorKey: 'debit',
       header: 'Debit',
       cell: ({ getValue }) => {
         const value = getValue() as number;
-        return value ? `($${value})` : '-';
+        return value ? (
+          <span className="font-bold text-sm text-gray-800">{`($${value})`}</span>
+        ) : (
+          <span className="text-sm text-gray-800">-</span>
+        );
       },
     },
     {
@@ -65,10 +83,20 @@ const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange,
       header: 'Credit',
       cell: ({ getValue }) => {
         const value = getValue() as number;
-        return value ? `$${value}` : '-';
+        return value ? (
+          <span className="font-bold text-sm text-gray-800">{`$${value}`}</span>
+        ) : (
+          <span className="text-sm text-gray-800">-</span>
+        );
       },
     },
-    { accessorKey: 'notes', header: 'Imported Notes' },
+    {
+      accessorKey: 'notes',
+      header: 'Imported Notes',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-800">{getValue() as string}</span>
+      ),
+    },
     {
       accessorKey: 'userNotes',
       header: 'Your Notes',
@@ -79,17 +107,23 @@ const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange,
             transactionId={transaction.id}
             initialNote={transaction.userNotes}
             onUpdate={onNoteChange}
+            setIsEditingNote={setIsEditingNote}
           />
         );
       },
     },
-    { accessorKey: 'status', header: 'Status' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-800">{getValue() as string}</span>
+      ),
+    },
     {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => {
         const transaction = row.original;
-        // Only show the "Mark Completed" button if not already complete.
         if (transaction.status !== 'completed') {
           return (
             <button
@@ -113,10 +147,10 @@ const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange,
           <Disclosure>
             {({ open }) => (
               <div>
-                <Disclosure.Button className="text-blue-600 underline text-sm">
+                <Disclosure.Button className="underline text-sm text-gray-800 hover:text-gray-600">
                   {open ? 'Hide Details' : 'Show Details'}
                 </Disclosure.Button>
-                <Disclosure.Panel className="mt-2 text-xs text-gray-500">
+                <Disclosure.Panel className="mt-2 text-xs text-gray-700 space-y-1">
                   <div>
                     <strong>Imported At:</strong> {formatDate(transaction.importedAt)}
                   </div>
@@ -142,15 +176,16 @@ const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange,
   });
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-100">
+    <div className="overflow-x-auto shadow rounded-lg border border-gray-300">
+      {/* Increase min-width to allow more space for notes */}
+      <table className="min-w-[900px] w-full">
+        <thead className="bg-gray-200">
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
                 <th
                   key={header.id}
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-semibold text-primary-dark uppercase tracking-wider"
                 >
                   {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
@@ -160,11 +195,11 @@ const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange,
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {table.getRowModel().rows.map(row => (
-            <tr key={row.id} className="hover:bg-gray-50">
+            <tr key={row.id} className="hover:bg-secondary-light">
               {row.getVisibleCells().map(cell => (
                 <td
                   key={cell.id}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                  className="px-4 py-4 whitespace-nowrap text-sm text-gray-800"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
@@ -176,5 +211,3 @@ const UserTransactions: React.FC<UserTransactionsProps> = ({ data, onNoteChange,
     </div>
   );
 };
-
-export default UserTransactions;
